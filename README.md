@@ -1,7 +1,5 @@
 # Ước lượng kích thước vật thể bằng thị giác máy
 
-Đây là mã nguồn đồ án tốt nghiệp của sinh viên **Trần Khoa An - 22021579**. Phần mềm đo tự động chiều dài và chiều rộng của mặt trên vật thể dạng hộp bằng một webcam RGB thông thường.
-
 ## Phạm vi hiện tại
 
 Hệ thống thực hiện phép đo hai chiều trên một mặt phẳng đã hiệu chuẩn. Phương pháp chính gồm:
@@ -83,4 +81,3 @@ Kiểm thử tự động xác nhận phép đo hình học trên mặt phẳng 
 - `tests`: kiểm thử hình học và tách nền.
 - `marker`: marker ArUco mẫu.
 - `HDSD_phan_mem.docx`: hướng dẫn sử dụng chi tiết.
-
