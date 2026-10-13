@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# IDE and operating system
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Runtime data generated on each computer
+calibration_images/*
+!calibration_images/.gitkeep
+measurement_images/*
+!measurement_images/.gitkeep
+measurements.csv
+background_reference.png
+plane_calibration.json
+measurement_calibration.json
+calibration.npz
+
+# Downloaded model weights
+*.pt
+*.pth
+models/
+
+# Temporary documents and logs
+doc_review/
+doc_review_*/
+report_assets/
+*.log
+~$*.docx
+
