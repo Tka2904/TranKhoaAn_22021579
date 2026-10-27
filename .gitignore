@@ -13,10 +13,10 @@ Thumbs.db
 desktop.ini
 
 # Local runtime settings; published calibration snapshots are under data/calibration
-background_reference.png
-plane_calibration.json
-measurement_calibration.json
-calibration.npz
+/background_reference.png
+/plane_calibration.json
+/measurement_calibration.json
+/calibration.npz
 
 # Downloaded model weights
 *.pt
