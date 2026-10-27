@@ -1,0 +1,6 @@
+# Preserve original dataset bytes across Windows and Unix checkouts.
+*.csv -text
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.npz binary
