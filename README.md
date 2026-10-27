@@ -60,7 +60,7 @@ Mẫu chuẩn nên lớn, phẳng, rõ biên và nằm gần vùng đặt vật.
 - Ảnh nền được lưu thành `background_reference.png`.
 - Homography mặt phẳng được lưu trong `plane_calibration.json`.
 
-Các tệp trên phụ thuộc máy và phiên thí nghiệm nên đã được loại khỏi kho mã nguồn bằng `.gitignore`.
+Ảnh và CSV thực nghiệm được lưu trong kho này. Các cấu hình mặt phẳng và ảnh nền phụ thuộc phiên đo; bản chụp tham khảo nằm trong `data/calibration`. Người dùng cần tự hiệu chuẩn khi đổi webcam hoặc bố trí đo.
 
 ## Kiểm thử
 
@@ -71,6 +71,19 @@ Sau khi cài đặt, chạy:
 ```
 
 Kiểm thử tự động xác nhận phép đo hình học trên mặt phẳng và khả năng tách vật thể khỏi nền tổng hợp. Độ chính xác thực tế vẫn phải được đánh giá bằng vật chuẩn và tập dữ liệu độc lập.
+
+## Dữ liệu thực nghiệm
+
+Kho hiện chứa 157 ảnh bàn cờ hiệu chuẩn và 270 ảnh kết quả đo có chú thích, cùng 271 bản ghi CSV nguồn. Một bản ghi nguồn chưa có ảnh tương ứng; tập phân tích chỉ dùng các mẫu có ảnh đối chiếu. Ảnh được giữ nguyên, không chỉnh sửa số đo trên ảnh.
+
+- [Hướng dẫn dữ liệu và cấu hình hiệu chuẩn](docs/du_lieu_thuc_nghiem.md).
+- [CSV nguồn](measurements.csv): toàn bộ các đợt lưu mẫu, gồm cả đợt thử ban đầu.
+- [V01: 140 mẫu đã phân nhóm](data/V01_curated.csv), vật đối chiếu 70 × 30 mm, bảy vùng ảnh; [phân tích V01](docs/danh_gia_V01.md).
+- [V02: 100 mẫu chính](data/V02_100_mau.csv), vật đối chiếu 80 × 60 mm, năm vị trí, khoảng cách ghi nhận 35 cm.
+- [V02: đối chiếu toàn bộ 119 mẫu](data/doi_chieu_V02_119_anh.csv) và [chỉ mục ảnh theo nhóm](data/V02_image_index.csv).
+- [Danh mục tệp và SHA-256](data/file_manifest.csv) phục vụ kiểm tra tính toàn vẹn.
+
+V01 và V02 được tổ chức liên tục theo cùng mục tiêu đánh giá sai số kích thước. Các đợt có bố trí và hiệu chuẩn khác nhau nên không dùng chênh lệch giữa hai vật để kết luận thuật toán được cải thiện. V03–V05 sẽ được bổ sung khi có dữ liệu thực nghiệm.
 
 ## Cấu trúc thư mục
 

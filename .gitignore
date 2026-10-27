@@ -12,12 +12,7 @@ venv/
 Thumbs.db
 desktop.ini
 
-# Runtime data generated on each computer
-calibration_images/*
-!calibration_images/.gitkeep
-measurement_images/*
-!measurement_images/.gitkeep
-measurements.csv
+# Local runtime settings; published calibration snapshots are under data/calibration
 background_reference.png
 plane_calibration.json
 measurement_calibration.json
