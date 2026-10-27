@@ -4,3 +4,4 @@
 *.jpg binary
 *.jpeg binary
 *.npz binary
+data/calibration/*.json -text
