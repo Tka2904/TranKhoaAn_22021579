@@ -63,7 +63,9 @@ class MeasurementApp:
             self.config.get("background_close_kernel", 19),
         )
         if BACKGROUND_FILE.exists():
-            self.background_detector.set_background(cv2.imread(str(BACKGROUND_FILE)))
+            # imread on Windows does not reliably handle accented paths.
+            background = cv2.imdecode(np.fromfile(BACKGROUND_FILE, dtype=np.uint8), cv2.IMREAD_COLOR)
+            self.background_detector.set_background(background)
         self.yolo: YoloSegmenter | None = None
         self.yolo_error: str | None = None
         self.inference_lock = threading.Lock()
@@ -101,57 +103,8 @@ class MeasurementApp:
         self.root.protocol("WM_DELETE_WINDOW", self.close)
 
     def _build_ui(self):
-        controls = ttk.Frame(self.root, padding=8)
-        controls.pack(fill=tk.X)
-        ttk.Label(controls, text="Camera:").grid(row=0, column=0, padx=4)
-        ttk.Spinbox(controls, from_=0, to=10, width=4, textvariable=self.camera_var).grid(row=0, column=1)
-        ttk.Label(controls, text="Nhận dạng:").grid(row=0, column=2, padx=(14, 4))
-        ttk.Combobox(controls, width=23, state="readonly", textvariable=self.detector_var,
-                     values=("Nền trống (khuyên dùng)", "Contour (nhanh)", "YOLO11-seg", "Kết hợp")).grid(row=0, column=3)
-        ttk.Label(controls, text="Độ tin cậy:").grid(row=0, column=4, padx=(14, 4))
-        ttk.Entry(controls, width=6, textvariable=self.conf_var).grid(row=0, column=5)
-        ttk.Button(controls, text="Bắt đầu", command=self.start).grid(row=0, column=6, padx=(18, 4))
-        ttk.Button(controls, text="Dừng", command=self.stop).grid(row=0, column=7, padx=4)
-        ttk.Button(controls, text="Lưu mẫu (ảnh + CSV)", command=self.save_sample).grid(row=0, column=8, padx=4)
-        ttk.Button(controls, text="Ghi nền trống", command=self.capture_empty_background).grid(row=0, column=9, padx=4)
-
-        ttk.Label(controls, text="ArUco cạnh (mm):").grid(row=1, column=0, padx=4, pady=(8, 0), sticky=tk.W)
-        ttk.Entry(controls, width=8, textvariable=self.marker_size_var).grid(row=1, column=1, pady=(8, 0))
-        ttk.Button(controls, text="Khóa theo ArUco", command=self.lock_aruco_plane).grid(row=1, column=2, padx=4, pady=(8, 0))
-        ttk.Label(controls, text="hoặc mẫu chữ nhật R × C (mm):").grid(row=1, column=3, padx=(14, 4), pady=(8, 0), sticky=tk.E)
-        ref_box = ttk.Frame(controls)
-        ref_box.grid(row=1, column=4, columnspan=2, pady=(8, 0), sticky=tk.W)
-        ttk.Entry(ref_box, width=7, textvariable=self.reference_width_var).pack(side=tk.LEFT)
-        ttk.Label(ref_box, text=" × ").pack(side=tk.LEFT)
-        ttk.Entry(ref_box, width=7, textvariable=self.reference_height_var).pack(side=tk.LEFT)
-        ttk.Button(controls, text="Chọn 4 góc", command=self.begin_manual_calibration).grid(row=1, column=6, padx=4, pady=(8, 0))
-        ttk.Button(controls, text="Xóa hiệu chuẩn", command=self.clear_plane).grid(row=1, column=7, padx=4, pady=(8, 0))
-        ttk.Label(controls, textvariable=self.calibration_var, foreground="#075985").grid(
-            row=1, column=8, columnspan=3, padx=(8, 0), pady=(8, 0), sticky=tk.W)
-
-        ttk.Label(controls, text="Khoảng cách camera-mặt phẳng (cm):").grid(
-            row=2, column=0, columnspan=2, padx=4, pady=(8, 0), sticky=tk.W)
-        ttk.Entry(controls, width=8, textvariable=self.distance_cm_var).grid(row=2, column=2, pady=(8, 0))
-        ttk.Label(controls, text="Kích thước chuẩn D × R (mm):").grid(row=2, column=3, padx=(14, 4), pady=(8, 0), sticky=tk.E)
-        truth_box = ttk.Frame(controls)
-        truth_box.grid(row=2, column=4, columnspan=2, pady=(8, 0), sticky=tk.W)
-        ttk.Entry(truth_box, width=7, textvariable=self.true_length_var).pack(side=tk.LEFT)
-        ttk.Label(truth_box, text=" × ").pack(side=tk.LEFT)
-        ttk.Entry(truth_box, width=7, textvariable=self.true_width_var).pack(side=tk.LEFT)
-        ttk.Label(controls, text="Một lần bấm sẽ lưu đồng thời ảnh và số liệu CSV.",
-                  foreground="#075985").grid(row=2, column=6, padx=4, pady=(8, 0), sticky=tk.W)
-        ttk.Label(controls, text="Đặt mặt cần đo đồng phẳng với mẫu chuẩn; sau hiệu chuẩn không cần chọn điểm trên vật.",
-                  foreground="#92400e").grid(row=2, column=7, columnspan=4, padx=(8, 0), pady=(8, 0), sticky=tk.W)
-
-        result_bar = ttk.Frame(self.root, padding=(12, 4, 12, 4))
-        result_bar.pack(fill=tk.X)
-        ttk.Label(result_bar, text="Kết quả:", font=("Segoe UI", 11, "bold")).pack(side=tk.LEFT)
-        ttk.Label(result_bar, textvariable=self.result_var, foreground="#b91c1c",
-                  font=("Segoe UI", 13, "bold")).pack(side=tk.LEFT, padx=10)
-        self.video_label = ttk.Label(self.root, anchor=tk.CENTER)
-        self.video_label.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
-        self.video_label.bind("<Button-1>", self._on_video_click)
-        ttk.Label(self.root, textvariable=self.status_var, anchor=tk.W, padding=8).pack(fill=tk.X)
+        from src.interface import build_interface
+        build_interface(self)
 
     def _load_saved_plane(self):
         if not PLANE_FILE.exists():
@@ -212,6 +165,7 @@ class MeasurementApp:
             self.capture.release()
             self.capture = None
         self.status_var.set("Đã dừng camera")
+        self.camera_state_var.set("Đã dừng")
 
     def _undistort(self, frame: np.ndarray) -> np.ndarray:
         if self.calibration is None or self.calibration.approximate:
@@ -305,7 +259,7 @@ class MeasurementApp:
             return
         background = np.median(np.stack(tuple(self.recent_frames), axis=0), axis=0).astype(np.uint8)
         self.background_detector.set_background(background)
-        cv2.imwrite(str(BACKGROUND_FILE), background)
+        self._write_png(BACKGROUND_FILE, background)
         self.detector_var.set("Nền trống (khuyên dùng)")
         self.history.clear()
         self.target_bbox = None
@@ -514,9 +468,10 @@ class MeasurementApp:
 
     def _show_frame(self, frame: np.ndarray):
         image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-        area_w, area_h = max(900, self.video_label.winfo_width()), max(560, self.video_label.winfo_height())
+        area_w, area_h = max(1, self.video_label.winfo_width()), max(1, self.video_label.winfo_height())
         scale = min(area_w / image.width, area_h / image.height)
         shown_w, shown_h = max(1, int(image.width * scale)), max(1, int(image.height * scale))
+        self.camera_state_var.set(f"Đang hoạt động  •  {image.width} × {image.height}")
         self.display_scale = scale
         self.display_offset = ((area_w - shown_w) // 2, (area_h - shown_h) // 2)
         photo = ImageTk.PhotoImage(image.resize((shown_w, shown_h), Image.Resampling.LANCZOS))
@@ -612,6 +567,12 @@ class MeasurementApp:
 
 
 def main():
+    # Keep camera click coordinates and the Windows display scale consistent.
+    import ctypes
+    try:
+        ctypes.windll.shcore.SetProcessDpiAwareness(1)
+    except (AttributeError, OSError):
+        pass
     root = tk.Tk()
     MeasurementApp(root)
     root.mainloop()
