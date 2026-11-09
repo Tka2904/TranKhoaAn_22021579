@@ -1,6 +1,6 @@
 # Khảo sát vật V01
 
-Vật V01 có kích thước đối chiếu 70 × 30 mm. Dữ liệu được ghi ngày 19–20/10/2026.
+Vật V01 có kích thước đối chiếu 70 × 30 mm.
 
 ## Tập phân tích
 
@@ -38,6 +38,6 @@ Bias là trung bình của sai số có dấu; MAE là trung bình trị tuyệt
 - Kết quả giới hạn ở một vật và bố trí khảo sát hiện tại. Mẫu xác lập mặt phẳng có cùng kích thước V01; kết quả gần vùng chuẩn cần được diễn giải như kiểm tra tính nhất quán, không thay thế đánh giá trên vật kiểm tra độc lập.
 - Cấu hình mặt phẳng giữa nhóm tâm và các nhóm rìa khác nhau; cần xét yếu tố này khi diễn giải sai số theo vị trí.
 - Các chỉ tiêu hiện tại tập trung vào sai số kích thước. Độ lặp lại khi đặt lại, tỷ lệ phép đo hợp lệ, tỷ lệ từ chối và thời gian xử lý cần được đánh giá bằng quy trình ghi nhận riêng.
-- V02 có đợt khảo sát riêng trong kho; V03–V05 chưa có số liệu. Cần phân tích riêng cấu hình từng đợt trước khi tổng hợp nhiều vật.
+- V02 và V03 có các bảng số liệu riêng. V04 có chỉ mục ảnh minh họa lỗi. Cần xét cấu hình từng đợt khi đối chiếu kết quả.
 
-Ảnh thí nghiệm được lưu trong `measurement_images` và CSV nguồn nằm tại `measurements.csv`. Bảng CSV đã chọn mẫu ở trên chứa thông tin đối chiếu và số liệu của tập chính. Khi tái lập, cần tự hiệu chuẩn đúng webcam, độ phân giải và mặt phẳng làm việc, đồng thời dùng vật kiểm tra độc lập.
+Ảnh thí nghiệm được lưu trong `measurement_images` và CSV bản chia sẻ nằm tại `measurements.csv`. Bảng CSV đã chọn mẫu ở trên chứa thông tin đối chiếu và số liệu của tập chính. Khi tái lập, cần tự hiệu chuẩn đúng webcam, độ phân giải và mặt phẳng làm việc, đồng thời dùng vật kiểm tra độc lập.

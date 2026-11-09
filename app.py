@@ -41,6 +41,7 @@ class MeasurementApp:
         self.config = json.loads((ROOT / "config.json").read_text(encoding="utf-8"))
         self.capture: cv2.VideoCapture | None = None
         self.running = False
+        self.frame_job: str | None = None
         self.frame_id = 0
         self.last_frame: np.ndarray | None = None
         self.last_annotated: np.ndarray | None = None
@@ -84,9 +85,13 @@ class MeasurementApp:
         self.target_bbox: tuple[int, int, int, int] | None = None
         self.display_scale = 1.0
         self.display_offset = (0, 0)
+        self.camera_size_note = ""
         self.notice_until = 0.0
 
         self.camera_var = tk.IntVar(value=self.config["camera_index"])
+        configured_size = f'{self.config["camera_width"]} × {self.config["camera_height"]}'
+        self.resolution_options = tuple(dict.fromkeys(("1280 × 720", "1920 × 1080", configured_size)))
+        self.resolution_var = tk.StringVar(value=configured_size)
         self.detector_var = tk.StringVar(value="Nền trống (khuyên dùng)")
         self.conf_var = tk.DoubleVar(value=self.config["confidence"])
         self.marker_size_var = tk.DoubleVar(value=self.config["marker_size_mm"])
@@ -135,37 +140,65 @@ class MeasurementApp:
         if self.running:
             return
         index = int(self.camera_var.get())
+        requested_width, requested_height = map(int, self.resolution_var.get().split(" × "))
         capture = cv2.VideoCapture(index, cv2.CAP_DSHOW)
         if not capture.isOpened():
             capture.release()
             capture = cv2.VideoCapture(index)
-        capture.set(cv2.CAP_PROP_FRAME_WIDTH, int(self.config["camera_width"]))
-        capture.set(cv2.CAP_PROP_FRAME_HEIGHT, int(self.config["camera_height"]))
+        capture.set(cv2.CAP_PROP_FRAME_WIDTH, requested_width)
+        capture.set(cv2.CAP_PROP_FRAME_HEIGHT, requested_height)
         capture.set(cv2.CAP_PROP_BUFFERSIZE, 1)
         if not capture.isOpened():
             capture.release()
             messagebox.showerror("Không mở được camera", f"Không tìm thấy camera số {index}.")
             return
-        width = int(capture.get(cv2.CAP_PROP_FRAME_WIDTH)) or int(self.config["camera_width"])
-        height = int(capture.get(cv2.CAP_PROP_FRAME_HEIGHT)) or int(self.config["camera_height"])
+        ok, frame = capture.read()
+        if not ok or frame is None:
+            capture.release()
+            messagebox.showerror("Không nhận được hình", "Thử độ phân giải khác hoặc kiểm tra kết nối camera.")
+            return
+        height, width = frame.shape[:2]
+        if self.plane_h is None:
+            self._load_saved_plane()
         self.calibration = load_camera_calibration(ROOT / self.config.get("calibration_file", "calibration.npz"),
                                                    width, height, float(self.config.get("camera_horizontal_fov_deg", 68.0)))
         if self.plane_image_size and self.plane_image_size != (width, height):
             self.plane_h = None
             self.calibration_var.set("Mặt phẳng: phải hiệu chuẩn lại do đổi độ phân giải")
+        self.history.clear()
+        self.recent_frames.clear()
+        self.target_bbox = None
+        self.marker_corners = None
+        self.manual_points.clear()
+        self.manual_mode = False
+        # Discard predictions that belong to the previous camera stream.
+        self.frame_id += int(self.config.get("max_detection_age_frames", 12)) + 1
         self.capture = capture
         self.running = True
+        self.resolution_select.configure(state="disabled")
         intrinsic = "nội tại thật" if not self.calibration.approximate else "chưa có nội tại thật"
         self.status_var.set(f"Camera {width}×{height} đã mở ({intrinsic})")
-        self._update_frame()
+        if (width, height) != (requested_width, requested_height):
+            self.camera_size_note = f"Camera cấp {width}×{height} thay cho {requested_width}×{requested_height}"
+        else:
+            self.camera_size_note = ""
+        self._update_frame(frame)
 
     def stop(self):
         self.running = False
+        if self.frame_job is not None:
+            self.root.after_cancel(self.frame_job)
+            self.frame_job = None
         if self.capture is not None:
             self.capture.release()
             self.capture = None
         self.status_var.set("Đã dừng camera")
         self.camera_state_var.set("Đã dừng")
+        self.resolution_select.configure(state="readonly")
+        self.last_frame = None
+        self.last_annotated = None
+        self.last_result = None
+        self.result_var.set("Đã dừng camera")
 
     def _undistort(self, frame: np.ndarray) -> np.ndarray:
         if self.calibration is None or self.calibration.approximate:
@@ -299,6 +332,7 @@ class MeasurementApp:
         if float(np.min(side_px)) < float(self.config.get("marker_min_side_px", 55)):
             return
         self.plane_h = marker_homography(corners, float(self.marker_size_var.get()))
+        self.plane_image_size = (frame.shape[1], frame.shape[0])
         self.plane_source = "ArUco theo từng khung"
         self.calibration_var.set("Mặt phẳng: ArUco đang được nhận dạng")
 
@@ -389,7 +423,8 @@ class MeasurementApp:
                         cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2, cv2.LINE_AA)
             return canvas
 
-        if self.detector_var.get() == "Nền trống (khuyên dùng)" and not self.background_detector.ready:
+        background = self.background_detector.background
+        if self.detector_var.get() == "Nền trống (khuyên dùng)" and (background is None or background.shape != frame.shape):
             self.last_result = None
             self.result_var.set("HÃY DỌN HẾT VẬT RỒI BẤM GHI NỀN TRỐNG")
             return canvas
@@ -449,14 +484,16 @@ class MeasurementApp:
             self.status_var.set(f"{intrinsic} | {self.plane_source}{yolo}")
         return canvas
 
-    def _update_frame(self):
+    def _update_frame(self, frame=None):
+        self.frame_job = None
         if not self.running or self.capture is None:
             return
-        ok, frame = self.capture.read()
-        if not ok:
-            self.stop()
-            self.result_var.set("Mất tín hiệu camera")
-            return
+        if frame is None:
+            ok, frame = self.capture.read()
+            if not ok or frame is None:
+                self.stop()
+                self.result_var.set("Mất tín hiệu camera")
+                return
         self.frame_id += 1
         frame = self._undistort(frame)
         self.last_frame = frame.copy()
@@ -464,14 +501,14 @@ class MeasurementApp:
         annotated = self._annotate(frame)
         self.last_annotated = annotated.copy()
         self._show_frame(annotated)
-        self.root.after(15, self._update_frame)
+        self.frame_job = self.root.after(15, self._update_frame)
 
     def _show_frame(self, frame: np.ndarray):
         image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
         area_w, area_h = max(1, self.video_label.winfo_width()), max(1, self.video_label.winfo_height())
         scale = min(area_w / image.width, area_h / image.height)
         shown_w, shown_h = max(1, int(image.width * scale)), max(1, int(image.height * scale))
-        self.camera_state_var.set(f"Đang hoạt động  •  {image.width} × {image.height}")
+        self.camera_state_var.set(self.camera_size_note or f"Đang hoạt động  •  {image.width} × {image.height}")
         self.display_scale = scale
         self.display_offset = ((area_w - shown_w) // 2, (area_h - shown_h) // 2)
         photo = ImageTk.PhotoImage(image.resize((shown_w, shown_h), Image.Resampling.LANCZOS))

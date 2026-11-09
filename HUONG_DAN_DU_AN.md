@@ -45,7 +45,7 @@ Mẫu chuẩn nên lớn, phẳng, rõ biên và nằm gần vùng đặt vật.
 
 ## Quy trình đo
 
-1. Chọn đúng số camera và bấm **Bắt đầu**.
+1. Chọn số camera và độ phân giải, sau đó bấm **Bắt đầu**. Trạng thái trên khung ảnh hiển thị độ phân giải thực mà camera cấp.
 2. Chọn **Nền trống (khuyên dùng)**.
 3. Dọn sạch vùng đo và bấm **Ghi nền trống**.
 4. Hiệu chuẩn mặt phẳng bằng một trong hai cách ở trên.
@@ -74,16 +74,15 @@ Kiểm thử tự động xác nhận phép đo hình học trên mặt phẳng 
 
 ## Dữ liệu thực nghiệm
 
-Kho hiện chứa 157 ảnh bàn cờ hiệu chuẩn và 270 ảnh kết quả đo có chú thích, cùng 271 bản ghi CSV nguồn. Một bản ghi nguồn chưa có ảnh tương ứng; tập phân tích chỉ dùng các mẫu có ảnh đối chiếu. Ảnh được giữ nguyên, không chỉnh sửa số đo trên ảnh.
+Kho chứa 157 ảnh bàn cờ, 371 ảnh kết quả đo, 372 bản ghi số liệu và 5 ảnh minh họa lỗi nhận dạng. Bản chia sẻ dùng mã mẫu trung tính và lược bỏ ngày giờ thu mẫu. Một bản ghi đo có trong bảng tổng hợp nhưng thiếu ảnh nguồn tương ứng.
 
-- [Hướng dẫn dữ liệu và cấu hình hiệu chuẩn](docs/du_lieu_thuc_nghiem.md).
-- [CSV nguồn](measurements.csv): toàn bộ các đợt lưu mẫu, gồm cả đợt thử ban đầu.
-- [V01: 140 mẫu đã phân nhóm](data/V01_curated.csv), vật đối chiếu 70 × 30 mm, bảy vùng ảnh; [phân tích V01](docs/danh_gia_V01.md).
-- [V02: 100 mẫu chính](data/V02_100_mau.csv), vật đối chiếu 80 × 60 mm, năm vị trí, khoảng cách ghi nhận 35 cm.
-- [V02: đối chiếu toàn bộ 119 mẫu](data/doi_chieu_V02_119_anh.csv) và [chỉ mục ảnh theo nhóm](data/V02_image_index.csv).
-- [Danh mục tệp và SHA-256](data/file_manifest.csv) phục vụ kiểm tra tính toàn vẹn.
-
-V01 và V02 được tổ chức liên tục theo cùng mục tiêu đánh giá sai số kích thước. Các đợt có bố trí và hiệu chuẩn khác nhau nên không dùng chênh lệch giữa hai vật để kết luận thuật toán được cải thiện. V03–V05 sẽ được bổ sung khi có dữ liệu thực nghiệm.
+- [Danh mục và cách đối chiếu dữ liệu](docs/du_lieu_thuc_nghiem.md).
+- [Bảng tổng hợp các đợt đo](measurements.csv).
+- [V01 – 140 mẫu](data/V01_curated.csv) và [phân tích V01](docs/danh_gia_V01.md).
+- [V02 – 100 mẫu chính](data/V02_100_mau.csv), [119 mẫu đối chiếu](data/doi_chieu_V02_119_anh.csv) và [chỉ mục ảnh](data/V02_image_index.csv).
+- [V03 – 100 mẫu khảo sát chiếu sáng](data/V03_100_mau.csv).
+- [V04 – chỉ mục ảnh lỗi](data/V04_chi_muc_anh.csv) và [ảnh chụp giao diện](data/V04_anh_minh_hoa/).
+- [Danh mục tệp và SHA-256](data/file_manifest.csv).
 
 ## Cấu trúc thư mục
 
